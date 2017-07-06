@@ -1,0 +1,165 @@
+---
+title: "Results portal"
+output: html_notebook
+---
+
+```{r run pipline, include = FALSE}
+
+prepare_new_dataset <- 0
+
+if(prepare_new_dataset == 1) {
+  
+  source("R/pipeline/load_append.R")
+  source("R/pipeline/validate.R")
+  source("R/pipeline/transform.R")
+ 
+  filter_data <- 1 
+  
+  if(filter_data == 1){
+    
+  source("R/pipeline/filter.R")
+    
+  }
+  
+  aggregate_data <- 1
+  
+  if(aggregate_data == 1){
+ 
+    source("R/pipeline/aggregate.R")
+    source("R/pipeline/aggregate_analysis.R")
+    
+  }
+  
+} else {
+  
+  source("R/pipeline/aggregate_analysis.R")
+  
+}
+
+```
+
+```{r setup, include = FALSE}
+
+rm(list = ls())
+
+library(tidyverse)
+library(ggrepel)
+
+source("R/functions/cluster_plots.R")
+source("R/functions/prepare_cluster_data.R")
+
+```
+
+
+```{r load data, include = FALSE}
+
+clustered_data_list <- list(abn = read_csv("data/pipeline/clustered_abn_1994_2016.csv") , 
+                                  farm = read_csv("data/pipeline/clustered_farm_1994_2016.csv"),
+                                  block = read_csv("data/pipeline/clustered_block_1994_2016.csv"))
+
+clustered_data_list_grower <- list(abn = read_csv("data/pipeline/clustered_abn_with_grower_name_1994_2016.csv") , 
+                                  farm = read_csv("data/pipeline/clustered_farm_with_grower_name_1994_2016.csv"))
+```
+
+
+```{r export plots, include = FALSE}
+
+# tch
+tch_cluster_plots <- plot_tch_clusters(clustered_data_list)
+
+filenames <- paste("TCH clusters by ",names(clustered_data_list), ".png", sep = "")
+
+map2(filenames, tch_cluster_plots, ggsave, path = "plots")
+
+#ccs
+ccs_cluster_plots <- plot_ccs_clusters(clustered_data_list)
+
+filenames <- paste("CCS clusters by ",names(clustered_data_list), ".png", sep = "")
+
+map2(filenames, ccs_cluster_plots, ggsave, path = "plots")
+
+# tsh
+tsh_cluster_plots <- plot_tsh_clusters(clustered_data_list)
+
+filenames <- paste("TSH clusters by ",names(clustered_data_list), ".png", sep = "")
+
+map2(filenames, tsh_cluster_plots, ggsave, path = "plots")
+
+```
+
+```{r show plots, echo = FALSE, fig.height = 6, fig.width = 10}
+
+# tch
+
+  # display
+  plot_tch_clusters(clustered_data_list)
+
+# ccs
+
+  # display
+  plot_ccs_clusters(clustered_data_list)
+  
+# tsh
+
+  # display
+  plot_tsh_clusters(clustered_data_list)
+
+```
+
+```{r top 5 growers at abn level, fig.height = 6, fig.width = 10, echo = FALSE}
+
+largest_abns <- 
+  
+  clustered_data_list_grower$abn %>% 
+    group_by(abn) %>% 
+    top_n(1) %>% 
+    ungroup %>%   
+    arrange(desc(predicted_harvested_area)) %>% 
+    top_n(5, predicted_harvested_area) %>% 
+    select(grower_name)
+
+largest_abns_identified <- ggplot(data = clustered_data_list_grower$abn, aes(x = predicted_harvested_area,
+                                                                             y = predicted_tch,
+                                                                             col = as.factor(clustered_predicted_tch))) +
+          geom_point() + 
+          
+          labs(title = "ABN Clusters of Tonnes of cane per hectare by harvested area", x = " Harvested area (ha)", 
+               y = "Tonnes of cane per hectare") + 
+          
+          theme(plot.title = element_text(face = "bold", size = 16, colour = "black")) + 
+          
+          theme(axis.title= element_text(face = "bold", size = 14, colour = "black")) + 
+          
+          theme(axis.text = element_text(colour = " black", face = "bold", size = 12)) + 
+          
+          theme(legend.title = element_text(face = "bold", colour = "black", size = 12)) +
+          
+          scale_colour_discrete(name = "Cluster") +
+          
+          scale_y_continuous(breaks=seq(40,160,40), limits = c(40,160)) +
+      
+          geom_hline(yintercept=85, colour = "dark green", linetype = 2, size = 0.75) +
+          
+          geom_label_repel(data = clustered_data_list_grower$abn %>% 
+                      filter(grower_name %in% largest_abns$grower_name),
+                                                                     
+                     aes(label = grower_name), size = 3, nudge_y = 7.5, nudge_x = 50,
+                     show.legend = FALSE)
+
+largest_abns_identified
+
+ggsave("plots/largest_abns_identified.png", largest_abns_identified, width = 10, height = 6)
+
+?ggsave
+
+```
+
+
+
+
+
+
+
+
+
+
