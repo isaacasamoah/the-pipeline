@@ -7,7 +7,6 @@ library(stringr)
 library(rgdal)
 library(rgeos)
 
-?readOGR
 # read in cane block layer - add all years to list
 tully_spatial <-  list(tully_spatial_2016 = readOGR("data/raw-data/spatial/F16_region.shp",stringsAsFactors = F))
 
@@ -72,11 +71,9 @@ substr(tully_spatial_WGS84@data$standard_sub_block,
          
   
 # check sub block length
-
 unique(str_length(tully_spatial_WGS84@data$standard_sub_block))
 
 # inspect Farm
-
 tully_spatial_WGS84@data$Farm
 
 # inspect Farm length
@@ -90,18 +87,6 @@ tully_spatial_WGS84@data <- tully_spatial_WGS84@data %>%
                                  substr(Farm,2, str_length(Farm)), Farm))
 
 # create unique block_id
-
-tully_spatial_WGS84@data <- tully_spatial_WGS84@data %>% 
   mutate(block_id = str_c(standard_farm, standard_sub_block))
 
 
-
-
-
-# build unique id for each @data object for each year (each year has its own spatial object)
-# first create block_id by concatenating farm and sub block
-# then grab code from build_unique_id
-
-# spatial index off the polygons - objects that have a heirarchy
-
-#https://philmikejones.wordpress.com/2015/09/03/dissolve-polygons-in-r/

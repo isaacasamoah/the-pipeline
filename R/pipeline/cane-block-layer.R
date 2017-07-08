@@ -23,10 +23,10 @@ rgdal_test <-  readOGR("data/cbl/F16_region.shp")
 rgdal_test@proj4string
 
 # using maptools
-tully_cbl <- readShapePoly("data/cbl/F16_region.shp")
+tully_cbl <- readShapePoly("data/raw-data/spatial/F16_region.shp")
 
 # using rgdal - grabs projection with read in
-tully_cbl <-  readOGR("data/cbl/F16_region.shp")
+tully_cbl <-  readOGR("data/raw-data/spatial/F16_region.shp")
 
 plot(tully_cbl)
 
@@ -212,7 +212,7 @@ m  # Print the map
 
 tully_cbl_lat_long@data$CaneYield 
 
-binpal <- colorBin(topo.colors(20,alpha = NULL), tully_cbl_lat_long@data$CaneYield,  8, pretty = FALSE)
+binpal <- colorNumeric(topo.colors(20,alpha = NULL), tully_cbl_lat_long@data$CaneYield)
 
 m <- leaflet(tully_cbl_lat_long) %>%
   addPolygons(color = ~binpal(CaneYield), stroke = FALSE, smoothFactor = 0.2, fillOpacity = 0.5) %>% 
@@ -239,6 +239,8 @@ m <- leaflet(tully_soils_projected) %>%
   addTiles()
   
 m  # Prin
+
+# create fake cane yield for Dion
 
 # # using shapefiles pkg  - crap
 # 

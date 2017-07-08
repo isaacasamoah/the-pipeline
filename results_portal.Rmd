@@ -5,7 +5,7 @@ output: html_notebook
 
 ```{r run pipline, include = FALSE}
 
-prepare_new_dataset <- 0
+prepare_new_dataset <- 1
 
 if(prepare_new_dataset == 1) {
   
