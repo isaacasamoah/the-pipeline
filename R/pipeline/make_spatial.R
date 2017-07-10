@@ -79,6 +79,7 @@ tully_spatial_WGS84@data$Farm
 # inspect Farm length
 unique(str_length(tully_spatial_WGS84@data$Farm))
 
+# why are there 4 digit farm codes - missing "F"
 tully_spatial_WGS84@data$Farm[str_length(tully_spatial_WGS84@data$Farm) == 4]
 
 # standardise Farm
@@ -87,6 +88,7 @@ tully_spatial_WGS84@data <- tully_spatial_WGS84@data %>%
                                  substr(Farm,2, str_length(Farm)), Farm))
 
 # create unique block_id
+tully_spatial_WGS84@data %>% 
   mutate(block_id = str_c(standard_farm, standard_sub_block))
 
 

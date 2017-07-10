@@ -80,7 +80,7 @@ map2(filenames, ccs_cluster_plots, ggsave, path = "plots")
 
 # tsh
 tsh_cluster_plots <- plot_tsh_clusters(clustered_data_list)
-
+ 
 filenames <- paste("TSH clusters by ",names(clustered_data_list), ".png", sep = "")
 
 map2(filenames, tsh_cluster_plots, ggsave, path = "plots")
