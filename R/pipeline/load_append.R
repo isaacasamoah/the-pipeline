@@ -51,7 +51,10 @@ grower_information_latest_record %>%
   select(abn, farm_code) %>% 
   arrange(abn, farm_code) %>% 
   write_csv("data/pipeline/abn_lookup_table.csv")
-# end
+
+# district reference table
+
+district_reference_table <- read_csv("P:/data/revenge_of_the_millers/district_reference_table.csv")
 
 # historic mill data
 date_range <- "1994-2015"
@@ -176,6 +179,10 @@ block_to_rake_appended <- bind_rows(block_to_rake_historic[common_columns_block_
 
 block_appended$block_id <-  str_c(substr(block_appended$block_id,1,4),"0",substr(block_appended$block_id,5,7))
 block_to_rake_appended$block_id <- str_c(substr(block_to_rake_appended$block_id,1,4),"0",substr(block_to_rake_appended$block_id,5,7))
+
+# add district names
+
+rake_appended <- left_join(rake_appended,district_reference_table, by =  "district_code")
 
 
 # write to csv

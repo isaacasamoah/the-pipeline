@@ -87,8 +87,67 @@ tully_spatial_WGS84@data <- tully_spatial_WGS84@data %>%
   mutate(standard_farm =  if_else(str_length(Farm) == 5,
                                  substr(Farm,2, str_length(Farm)), Farm))
 
-# create unique block_id
-tully_spatial_WGS84@data %>% 
-  mutate(block_id = str_c(standard_farm, standard_sub_block))
+# create unique block_id and select variables for spatial reference table
+tully_spatial_WGS84@data <-  tully_spatial_WGS84@data %>% 
+  mutate(block_id = str_c(standard_farm, standard_sub_block)) %>% 
+  rename(soil = Soil) %>% 
+  select(block_id, standard_farm, soil)
+
+# collapse to dataframe
+tully_spatial_WGS84_data <-  tully_spatial_WGS84@data %>% bind_cols(data_frame(id = seq(0,length(tully_spatial_WGS84@data$block_id) -1 ,1)))
+
+tully_spatial_WGS84_fortified <-  fortify(tully_spatial_WGS84) %>% 
+  rename(poly_long = long, poly_lat = lat)
+
+# extract centroids
+tully_spatial_WGS84_centroids <- data_frame(long = coordinates(tully_spatial_WGS84)[,1], 
+                                            lat = coordinates(tully_spatial_WGS84)[,2]) %>% 
+  mutate(id = seq(0,length(tully_spatial_WGS84@data$block_id) -1 ,1))
+
+tully_spatial_WGS84_data_centroids <- tully_spatial_WGS84_data %>% left_join(tully_spatial_WGS84_centroids, by = "id")
+
+# combine into spatial reference table
+
+tully_spatial_WGS84_data_frame <- merge(tully_spatial_WGS84_data_centroids, tully_spatial_WGS84_fortified, by = "id") %>% 
+
+# test mapping with polygons
 
 
+library(leaflet)
+library(sp)
+?addPolygons
+
+polyFunc<-function(group, d){
+  poly<-filter(d, id==group) %>% 
+    select(poly_long, poly_lat)
+  return(Polygons(list(Polygon(poly)), group))
+}
+
+
+polyFunc(tully_spatial_WGS84_data_frame, 0)
+
+# build function to map fortified dataframe to spatialpolygonsdataframe object for leaflet when required.
+# this is so we can stroe spatial information as a simple csv/table
+
+tully_spatial_WGS84_data_frame %>% 
+  filter(id == 0) %>% 
+  select(poly_long, poly_lat) %>% 
+  Polygon %>% 
+  list() %>% 
+  Polygons(0)
+
+# tracts <- distinct(ggtract, id, percent)
+
+id  <- tully_spatial_WGS84_data_frame$id
+
+polygons <- id %>% map(polyFunc, tully_spatial_WGS84_data_frame)
+
+polygons <- lapply(id, function(x) polyFunc(x, d=tully_spatial_WGS84_data_frame)) 
+sp.polygon<-SpatialPolygons(polygons)
+df.polygon<-SpatialPolygonsDataFrame(sp.polygon, 
+                                     data=data.frame(row.names=tractname, tracts))
+
+
+leaflet(tully_spatial_WGS84_data_frame) %>% 
+  addTiles() %>% 
+  addPolygons(group = "id")

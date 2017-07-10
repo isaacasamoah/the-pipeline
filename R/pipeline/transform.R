@@ -73,6 +73,22 @@ block_level %>% ungroup %>%  summarise(sum(harv_tonnes_block_calc, na.rm = T)) =
 farm_level %>% ungroup %>% summarise(sum(harv_tonnes_farm, na.rm = T)) ==
 abn_level %>% ungroup %>% summarise(sum(harv_tonnes_abn, na.rm = T))
 
+# map each level to district and district name
+
+#create reference tables
+block_to_district <- block_to_rake_joined %>% 
+  distinct(block_id, district_code, district_name)
+
+farm_to_district <- block_to_rake_joined %>% 
+  distinct(farm_code, district_code, district_name)
+
+
+# map block to district
+block_level <- block_level %>% left_join(block_to_district, by = "block_id") %>% 
+  distinct(district_code, district_name)
+
+#map farm to district
+farm_level <- farm_level %>%  left_join(farm_to_district, by = "farm_code")
 
 # write to csv
 
@@ -86,3 +102,5 @@ abn_level %>%
   write_csv("data/pipeline/abn_level.csv")
 
 # end
+
+
